@@ -1,0 +1,17 @@
+# Specify what kind of files to exclude
+
+#IntelliJ
+.idea/
+
+# Byte-complied/ optimized/ DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+.python-version
