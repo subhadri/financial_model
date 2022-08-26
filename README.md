@@ -20,4 +20,4 @@ Build a package in Python that where user will input a company's financial state
 
 ## Vision:
 
-Connect this package to an API that will help to fetch data-points directly without involving Excel and aloow more more diverse forecasting and reporting techniques
+Connect this package to an API that will help to fetch data-points directly without involving Excel and allow for diverse forecasting and reporting techniques going forward.
