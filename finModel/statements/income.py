@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
-from functools import reduce
+from typing import List
 import pandas as pd
 
 @dataclass
