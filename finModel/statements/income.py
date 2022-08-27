@@ -1,6 +1,8 @@
+from finModel.utils.transform import const_growth, linear_trend, const_pandas_series, mean_g, const_share
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 import pandas as pd
+import numpy as np
 
 @dataclass
 class Revenue:
@@ -58,7 +60,7 @@ class IncomeStatement:
     ebitda: pd.Series = field(init=False)
     ebit: pd.Series = field(init=False)
     ebt: pd.Series = field(init=False)
-    tax_rate: pd.Series = field(init=False)
+    tax_rate: Optional[pd.Series] = field(init=False)
     net_income: pd.Series = field(init=False)
 
     def __post_init__(self):
@@ -88,4 +90,28 @@ class IncomeStatement:
         return pd.concat(series_list,axis=1)
 
 
+def ForecastedIncomeStatement(inc:IncomeStatement,f_date:List[str]) -> IncomeStatement:
+    '''
+    Performs the forecast for each date using assumptions for each component as defined here.
+    :param inc: actuals instance
+    :param f_date: dates to be forecasted
+    :return: forecasted instance
+    '''
+    f_revenue: pd.Series = const_growth(inc.revenue.revenue,mean_g(inc.revenue.revenue),f_date)
+    forecasted = IncomeStatement(
+        revenue=Revenue(revenue=f_revenue, other_revenue=const_growth(inc.revenue.other_revenue,0.0,f_date)),
+        cogs=COGS(raw_material=const_pandas_series(inc.cogs.raw_material.name,f_date),
+                  direct_cost=const_share(f_revenue,np.nanmean(inc.cogs.cogs/inc.revenue.revenue),f_date)),
+        opex=OperatingExpense(
+            cost_for_services=const_share(f_revenue,np.nanmean(inc.opex.opex/inc.revenue.revenue),f_date),
+            lease_cost=const_pandas_series(inc.opex.lease_cost.name, f_date),
+            other=const_pandas_series(inc.opex.other.name, f_date)),
+        d_and_a=const_share(f_revenue,np.nanmean(inc.d_and_a/inc.revenue.revenue),f_date),
+        int_expense=const_growth(inc.int_expense,0.0,f_date),
+        extraordinary_income=const_share(f_revenue,np.array(0.0),f_date),
+        tax=const_pandas_series(inc.tax.name,f_date))
+    forecasted.tax_rate = const_pandas_series(inc.tax_rate.name,f_date,np.nanmean(inc.tax/inc.ebt))
+    forecasted.tax = forecasted.tax_rate * forecasted.ebt
+    forecasted.net_income = forecasted.ebt + forecasted.tax
+    return forecasted
 
