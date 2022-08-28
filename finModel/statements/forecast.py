@@ -6,9 +6,7 @@ from finModel.utils.transform import const_growth, days_outstanding, const_panda
 from finModel.utils.transform import add_movement, mean_g, const_share
 from finModel.statements.income import IncomeStatement, Revenue, OperatingExpense, COGS
 from finModel.statements.balance import BalanceSheet, FinLiab, OtherLiab, Equity
-from finModel.statements.cashflow import CashFlowStatement
-from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List
 import pandas as pd
 import numpy as np
 
@@ -71,8 +69,7 @@ def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeSta
         4. Inventory -> days outstanding as % of revenues
         5. Trade receivables/payables -> days outstanding as % of revenues
         6. Other assets/liabilities -> avg. % of revenues
-        7. Cash -> Beginning cash position + net cashflow
-        8. Shareholder's equity -> Beginning equity + net income
+        7. Shareholder's equity -> Beginning equity + net income
 
     :param bs: balance sheet (actuals)
     :param a_inc: income statement (actuals)
@@ -87,8 +84,8 @@ def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeSta
         financial_liability=FinLiab(
             bank_borrowing=const_growth(bs.financial_liability.bank_borrowing,0.0,f_date),
             other_financial_liability=const_growth(bs.financial_liability.other_financial_liability,0.0,f_date)),
-        inventory=-(const_share(
-            f_inc.revenue.revenue,np.mean(days_outstanding(bs.inventory,a_inc.cogs.cogs,360)),f_date))/360,
+        inventory=(const_share(
+            f_inc.cogs.cogs,np.mean(days_outstanding(bs.inventory,a_inc.cogs.cogs,360)),f_date))/360,
         trade_receivable=(const_share(
             f_inc.revenue.revenue,np.mean(days_outstanding(bs.trade_receivable,a_inc.revenue.revenue,360)),f_date))/360,
         other_asset=const_share(f_inc.revenue.revenue,np.nanmean(bs.other_asset/a_inc.revenue.revenue),f_date),
@@ -100,14 +97,14 @@ def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeSta
                 f_date),
             deferred_taxes=const_share(
                 f_inc.revenue.revenue,np.nanmean(bs.other_liability.deferred_taxes/a_inc.revenue.revenue),f_date)),
-        cash=const_pandas_series(bs.cash.name,f_date), # will calculate later when have net cashflows forecasts
-        trade_payable=-(const_share(
-            f_inc.revenue.revenue,np.mean(days_outstanding(bs.trade_payable,a_inc.cogs.cogs,360)),f_date))/360,
+        trade_payable=(const_share(
+            f_inc.cogs.cogs,np.mean(days_outstanding(bs.trade_payable,a_inc.cogs.cogs,360)),f_date))/360,
         shareholder_equity=Equity(
             share_capital=const_pandas_series(bs.shareholder_equity.share_capital.name,f_date),
             reserve=const_pandas_series(bs.shareholder_equity.reserve.name,f_date),
             retained_earning=const_pandas_series(bs.shareholder_equity.retained_earning.name,f_date),
             net_annual_profit=add_movement(bs.shareholder_equity.total_equity,f_inc.net_income))
     )
+    # Storing the difference in total assets and liabilities
 
     return f_bs

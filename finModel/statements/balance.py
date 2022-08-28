@@ -76,17 +76,19 @@ class BalanceSheet:
     trade_receivable: pd.Series
     other_asset: pd.Series
     other_liability: OtherLiab
-    cash: pd.Series
     trade_payable: pd.Series
     shareholder_equity: Equity
+    cash: pd.Series = field(init=False)
     total_asset: pd.Series = field(init=False)
     total_liability_and_equity: pd.Series = field(init=False)
 
     def __post_init__(self):
-        self.total_asset = self.intangible_asset + self.ppe + self.financial_asset + self.inventory + \
-                           self.trade_receivable + self.other_asset + self.cash
+        asset_minus_cash = self.intangible_asset + self.ppe + self.financial_asset + self.inventory + \
+                           self.trade_receivable + self.other_asset
         self.total_liability_and_equity = self.trade_payable + self.other_liability.total + self.financial_liability.total + \
                                           self.shareholder_equity.total_equity
+        self.cash = self.total_liability_and_equity - asset_minus_cash
+        self.total_asset = asset_minus_cash + self.cash
 
     def to_pandas_df(self) -> pd.DataFrame:
         series_list: List[pd.Series] = [pd.Series(self.intangible_asset,name="Intangible assets"),
@@ -115,7 +117,6 @@ class BalanceSheet:
             trade_receivable=pd.concat([self.trade_receivable,other.trade_receivable]).sort_index(),
             other_asset=pd.concat([self.other_asset,other.other_asset]).sort_index(),
             other_liability=self.other_liability.attach(other.other_liability),
-            cash=pd.concat([self.cash,other.cash]).sort_index(),
             trade_payable=pd.concat([self.trade_payable,other.trade_payable]).sort_index(),
             shareholder_equity=self.shareholder_equity.attach(other.shareholder_equity)
         )

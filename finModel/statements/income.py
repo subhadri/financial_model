@@ -1,8 +1,6 @@
-from finModel.utils.transform import const_growth, linear_trend, const_pandas_series, mean_g, const_share
 from dataclasses import dataclass, field
 from typing import List
 import pandas as pd
-import numpy as np
 
 @dataclass
 class Revenue:
@@ -107,9 +105,9 @@ class IncomeStatement:
             revenue=self.revenue.attach(other.revenue),
             cogs=self.cogs.attach(other.cogs),
             opex=self.opex.attach(other.opex),
-            d_and_a=pd.concat([self.d_and_a,self.d_and_a]).sort_index(),
-            int_expense=pd.concat([self.int_expense,self.int_expense]).sort_index(),
-            extraordinary_income=pd.concat([self.extraordinary_income,self.extraordinary_income]).sort_index(),
-            tax=pd.concat([self.tax,self.tax]).sort_index()
+            d_and_a=pd.concat([self.d_and_a,other.d_and_a]).sort_index(),
+            int_expense=pd.concat([self.int_expense,other.int_expense]).sort_index(),
+            extraordinary_income=pd.concat([self.extraordinary_income,other.extraordinary_income]).sort_index(),
+            tax=pd.concat([self.tax,other.tax]).sort_index()
         )
 

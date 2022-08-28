@@ -1,11 +1,9 @@
-from finModel.utils.transform import add_movement
 from finModel.statements.forecast import is_forecast_avg_growth, bs_forecast_avg_growth
 from finModel.statements.income import IncomeStatement
 from finModel.statements.balance import BalanceSheet
 from finModel.statements.cashflow import CashFlowStatement
 from dataclasses import dataclass, field
 from typing import Union, List
-import pandas as pd
 
 @dataclass
 class FinancialStatement:
@@ -21,4 +19,3 @@ class FinancialStatement:
         self.income = inc.attach(f_inc)
         self.balance = bs.attach(f_bs)
         self.cash = CashFlowStatement(self.income,self.balance)
-        self.balance.cash = add_movement(bs.cash,self.cash.net_cashflow)
