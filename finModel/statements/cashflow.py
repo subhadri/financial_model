@@ -18,6 +18,13 @@ class OtherInvestmentMovement:
         self.intangible_asset = -bs.intangible_asset.diff()
         self.financial_asset = -bs.financial_asset.diff()
 
+    def attach(self,other:"OtherInvestmentMovement") -> "OtherInvestmentMovement":
+        return OtherInvestmentMovement(other_asset=pd.concat([self.other_asset,other.other_asset]).sort_index(),
+            other_liability=pd.concat([self.other_liability,other.other_liability]).sort_index(),
+            intangible_asset=pd.concat([self.intangible_asset,other.intangible_asset]).sort_index()
+        )
+
+
 @dataclass
 class CashFlowStatement:
     ebit: pd.Series
