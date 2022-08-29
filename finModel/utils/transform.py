@@ -5,7 +5,6 @@ various financial statements.
 
 import statsmodels.formula.api as smf
 from typing import List, Hashable
-import datetime as dt
 import pandas as pd
 import numpy as np
 

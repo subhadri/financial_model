@@ -110,4 +110,3 @@ class IncomeStatement:
             extraordinary_income=pd.concat([self.extraordinary_income,other.extraordinary_income]).sort_index(),
             tax=pd.concat([self.tax,other.tax]).sort_index()
         )
-

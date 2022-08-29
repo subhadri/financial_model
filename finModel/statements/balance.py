@@ -74,9 +74,9 @@ class BalanceSheet:
     financial_liability: FinLiab
     inventory: pd.Series
     trade_receivable: pd.Series
+    trade_payable: pd.Series
     other_asset: pd.Series
     other_liability: OtherLiab
-    trade_payable: pd.Series
     shareholder_equity: Equity
     cash: pd.Series = field(init=False)
     total_asset: pd.Series = field(init=False)
@@ -99,7 +99,6 @@ class BalanceSheet:
                                         pd.Series(self.other_asset,name="Other assets"),
                                         pd.Series(self.cash,name="Cash and equivalents"),
                                         pd.Series(self.total_asset,name="Total Assets"),
-                                        pd.Series(self.trade_payable,name="Trade payable"),
                                         pd.Series(self.trade_payable,name="Trade payable"),
                                         pd.Series(self.other_liability.total,name="Other liabilities"),
                                         pd.Series(self.financial_liability.total,name="Financial liabilities"),
