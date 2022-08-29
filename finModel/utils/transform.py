@@ -5,12 +5,37 @@ various financial statements.
 
 import statsmodels.formula.api as smf
 from typing import List, Hashable
-import datetime as dt
 import pandas as pd
 import numpy as np
 
 
+def add_movement(on:pd.Series,movement:pd.Series) -> pd.Series:
+    '''
+    Add the current year movement to beginning-of-the-period position and get back the new positions
+    :param on: series that contains the beginning position
+    :param movement: movements of each period
+    :return: closing position
+    '''
+    last_date_actuals: np.datetime64 = on.index.max()
+    start_pos: float = on[last_date_actuals]
+    ser_with_start: pd.Series = pd.Series(start_pos).append(movement[movement.index > last_date_actuals])
+    return ser_with_start.cumsum()[1:]
+
+
+def days_outstanding(num:pd.Series,den:pd.Series,f:int=360) -> np.ndarray:
+    '''
+    Generate the DSO/DIO/DPO metrics as an annualised %
+    :param num: trade receivable/payables or inventory
+    :param den: revenues
+    :param f: days in the period
+    '''
+    return np.array([f*(num[idx]/den[idx]) for idx in num.index],dtype=float)
+
+
 def mean_g(ser: pd.Series) -> np.float:
+    '''
+    Calculate average of period-on-period growth rates when provided with level values.
+    '''
     mean = np.nanmean((ser/ser.shift(1))-1)
     return mean
 

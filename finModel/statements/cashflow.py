@@ -18,6 +18,7 @@ class OtherInvestmentMovement:
         self.intangible_asset = -bs.intangible_asset.diff()
         self.financial_asset = -bs.financial_asset.diff()
 
+
 @dataclass
 class CashFlowStatement:
     ebit: pd.Series
