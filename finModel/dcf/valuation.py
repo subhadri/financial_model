@@ -3,7 +3,7 @@ PURPOSE: This module performs the direct cashflows valuation and holds associate
 """
 from finModel.statements.main import FinancialStatement
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict, Optional
 import pandas as pd
 import numpy as np
 
@@ -49,6 +49,9 @@ def calc_wacc(D:float,E:float,t:float,kd:float,ke:float) -> float:
 class DCFValuation:
     wacc: float
     g: float
+    actual_dates: List[str]
+    forecast_dates: List[str]
+    statement: FinancialStatement
     pv_ufcf: float = field(init=False)
     pv_ufcf_shr: float = field(init=False)
     cont_val: float = field(init=False)
@@ -62,10 +65,13 @@ class DCFValuation:
     def __init__(self,wacc:float,lt_growth:float,a_date:List[str],f_date:List[str],fin:FinancialStatement):
         self.wacc = wacc
         self.g = lt_growth
+        self.actual_dates = a_date
+        self.forecast_dates = f_date
+        self.statement = fin
         ufcf: pd.Series = fin.cash.ufcf[f_date]
-        discount: np.ndarray = np.ndarray([1/np.power(1+wacc,idx) for idx in np.arange(1,len(ufcf)+1)])
+        discount: np.ndarray = np.array([1/np.power(1+wacc,idx) for idx in np.arange(1,len(f_date)+1)])
         self.pv_ufcf = np.multiply(ufcf,discount).sum()
-        self.cont_val = self.pv_ufcf * (1+self.g) / (self.wacc-self.g)
+        self.cont_val = ufcf[-1] * (1+self.g) / (self.wacc-self.g)
         self.pv_cont_val = self.cont_val * discount[-1]
         self.ent_val = self.pv_ufcf + self.pv_cont_val
         self.tot_fin_liab = - fin.balance.financial_liability.total[a_date[-1]]
@@ -74,21 +80,47 @@ class DCFValuation:
         self.pv_ufcf_shr = self.pv_ufcf/self.ent_val
         self.pv_cont_val_shr = self.pv_cont_val/self.ent_val
 
-    def __str__(self):
-        out: List[pd.Series] = [
-            pd.Series(f"{round(self.wacc*100,0)}%",index="WACC"),
-            pd.Series(f"{round(self.g*100,0)}%",index="long-term growth"),
-            pd.Series(self.pv_ufcf,index="PV of Cash flows"),
-            pd.Series(self.pv_ufcf_shr,index="PV of Cash flows (%)"),
-            pd.Series(self.cont_val,index="Continuing value"),
-            pd.Series(self.pv_cont_val,index="PV of Continuing value"),
-            pd.Series(self.pv_cont_val_shr,index="PV of Continuing value (%)"),
-            pd.Series(self.ent_val,index="Enterprise value"),
-            pd.Series(self.tot_fin_liab,index="(-) Financial liabilities"),
-            pd.Series(self.cash,index="(+) Cash"),
-            pd.Series(self.equity,index="Equity value")]
+    def to_pandas_df(self) -> pd.DataFrame:
+        res_dict: Dict[str,float] = {
+            "WACC": self.wacc,
+            "long-term growth": self.g,
+            "PV of Cash flows": self.pv_ufcf,
+            "PV of Cash flows (%)": self.pv_ufcf_shr,
+            "Continuing value": self.cont_val,
+            "PV of Continuing value": self.pv_cont_val,
+            "PV of Continuing value (%)": self.pv_cont_val_shr,
+            "Enterprise value": self.ent_val,
+            "(-) Financial liabilities": self.tot_fin_liab,
+            "(+) Cash": self.cash,
+            "Equity value": self.equity,
+        }
+        out: pd.DataFrame = pd.DataFrame({
+            "metric": [k for k,v in res_dict.items()],
+            "": [v for k,v in res_dict.items()]
+        })
 
-        return pd.concat(out,axis=0)
+        return out
+
+    def simulate_enterprise_val(self, wacc: List[float] = None, lt_growth: List[float] = None) -> pd.DataFrame:
+        if wacc is None:
+            wacc: List[float] = [self.wacc + v for v in [-0.01,0,0.01,0.02]]
+        if lt_growth is None:
+            lt_growth: List[float] = [self.g + v for v in [-0.01,0,0.01,0.02]]
+
+        result_set = []
+        for w in wacc:
+            for g in lt_growth:
+                d: DCFValuation = DCFValuation(wacc=w,lt_growth=g,a_date=self.actual_dates,
+                                               f_date=self.forecast_dates,fin=self.statement)
+                result_set.append(d)
+
+        simulated: pd.DataFrame = pd.DataFrame({
+            "wacc": [dcf.wacc for dcf in result_set],
+            "long-term growth": [dcf.g for dcf in result_set],
+            "enterpise value": [dcf.ent_val for dcf in result_set],
+        })
+
+        return simulated
 
 
 
