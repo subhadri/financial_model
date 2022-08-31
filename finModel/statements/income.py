@@ -7,15 +7,15 @@ class Revenue:
     '''
     Stores the revenue from sales and other sources and calculates the total revenue
     '''
-    revenue: pd.Series
+    sales: pd.Series
     other_revenue: pd.Series
     tot_revenue: pd.Series = field(init=False)
 
     def __post_init__(self):
-        self.tot_revenue = self.revenue + self.other_revenue
+        self.tot_revenue = self.sales + self.other_revenue
 
     def attach(self,other:"Revenue") -> "Revenue":
-        return Revenue(revenue=pd.concat([self.revenue,other.revenue]).sort_index(),
+        return Revenue(sales=pd.concat([self.sales, other.sales]).sort_index(),
                        other_revenue=pd.concat([self.other_revenue,other.other_revenue]).sort_index())
 
 
@@ -83,7 +83,7 @@ class IncomeStatement:
         self.net_income = self.ebt + self.tax
 
     def to_pandas_df(self) -> pd.DataFrame:
-        series_list: List[pd.Series] = [pd.Series(self.revenue.revenue,name="Revenues"),
+        series_list: List[pd.Series] = [pd.Series(self.revenue.sales, name="Revenues"),
                                         pd.Series(self.revenue.other_revenue,name="Other revenues"),
                                         pd.Series(self.revenue.tot_revenue,name="Total revenues"),
                                         pd.Series(self.cogs.cogs,name="Cost of goods sold"),

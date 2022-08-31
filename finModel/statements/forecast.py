@@ -31,18 +31,18 @@ def is_forecast_avg_growth(inc:IncomeStatement, f_date:List[str]) -> IncomeState
     :return: income statement (forecasted)
     '''
     # Forecast the revenues first; as they will be used to compute % shares when initialising the forecast instance
-    f_revenue: pd.Series = const_growth(inc.revenue.revenue,mean_g(inc.revenue.revenue),f_date)
+    f_revenue: pd.Series = const_growth(inc.revenue.sales, mean_g(inc.revenue.sales), f_date)
     # Initialise the forecasted instance
     forecasted = IncomeStatement(
-        revenue=Revenue(revenue=f_revenue, other_revenue=const_growth(inc.revenue.other_revenue,0.0,f_date)),
+        revenue=Revenue(sales=f_revenue, other_revenue=const_growth(inc.revenue.other_revenue, 0.0, f_date)),
         cogs=COGS(
             raw_material=const_pandas_series(inc.cogs.cogs.name,f_date),
-            direct_cost=const_share(f_revenue,np.nanmean(inc.cogs.cogs/inc.revenue.revenue),f_date)),
+            direct_cost=const_share(f_revenue, np.nanmean(inc.cogs.cogs / inc.revenue.sales), f_date)),
         opex=OperatingExpense(
-            cost_for_services=const_share(f_revenue,np.nanmean(inc.opex.opex/inc.revenue.revenue),f_date),
+            cost_for_services=const_share(f_revenue, np.nanmean(inc.opex.opex / inc.revenue.sales), f_date),
             lease_cost=const_pandas_series(inc.opex.lease_cost.name,f_date),
             other=const_pandas_series(inc.opex.other,f_date)),
-        d_and_a=const_share(f_revenue,np.nanmean(inc.d_and_a/inc.revenue.revenue),f_date),
+        d_and_a=const_share(f_revenue, np.nanmean(inc.d_and_a / inc.revenue.sales), f_date),
         int_expense=const_growth(inc.int_expense,0.0,f_date),
         extraordinary_income=const_share(f_revenue,np.array(0.0),f_date),
         tax=const_pandas_series(inc.tax.name,f_date))
@@ -79,7 +79,7 @@ def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeSta
     '''
     f_bs = BalanceSheet(
         intangible_asset=const_growth(bs.intangible_asset,0.0,f_date),
-        ppe=const_share(f_inc.revenue.revenue,np.nanmean(bs.ppe/a_inc.revenue.revenue),f_date),
+        ppe=const_share(f_inc.revenue.sales, np.nanmean(bs.ppe / a_inc.revenue.sales), f_date),
         financial_asset=const_growth(bs.financial_asset,0.0,f_date),
         financial_liability=FinLiab(
             bank_borrowing=const_growth(bs.financial_liability.bank_borrowing,0.0,f_date),
@@ -87,16 +87,16 @@ def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeSta
         inventory=(const_share(
             f_inc.cogs.cogs,np.mean(days_outstanding(bs.inventory,a_inc.cogs.cogs,360)),f_date))/360,
         trade_receivable=(const_share(
-            f_inc.revenue.revenue,np.mean(days_outstanding(bs.trade_receivable,a_inc.revenue.revenue,360)),f_date))/360,
-        other_asset=const_share(f_inc.revenue.revenue,np.nanmean(bs.other_asset/a_inc.revenue.revenue),f_date),
+            f_inc.revenue.sales,np.mean(days_outstanding(bs.trade_receivable, a_inc.revenue.sales, 360)),f_date)) / 360,
+        other_asset=const_share(f_inc.revenue.sales, np.nanmean(bs.other_asset / a_inc.revenue.sales), f_date),
         other_liability=OtherLiab(
             other_liability=const_share(
-                f_inc.revenue.revenue,np.nanmean(bs.other_liability.other_liability/a_inc.revenue.revenue),f_date),
+                f_inc.revenue.sales,np.nanmean(bs.other_liability.other_liability / a_inc.revenue.sales),f_date),
             provision_for_retirement_benefit=const_share(
-                f_inc.revenue.revenue,np.nanmean(bs.other_liability.provision_for_retirement_benefit/a_inc.revenue.revenue),
+                f_inc.revenue.sales,np.nanmean(bs.other_liability.provision_for_retirement_benefit / a_inc.revenue.sales),
                 f_date),
             deferred_taxes=const_share(
-                f_inc.revenue.revenue,np.nanmean(bs.other_liability.deferred_taxes/a_inc.revenue.revenue),f_date)),
+                f_inc.revenue.sales,np.nanmean(bs.other_liability.deferred_taxes / a_inc.revenue.sales),f_date)),
         trade_payable=(const_share(
             f_inc.cogs.cogs,np.mean(days_outstanding(bs.trade_payable,a_inc.cogs.cogs,360)),f_date))/360,
         shareholder_equity=Equity(

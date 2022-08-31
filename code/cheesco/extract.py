@@ -22,7 +22,7 @@ def source_income(file_loc:str,actual_dates:List[str]) -> IncomeStatement:
     data = data.set_index('date')
 
     income: IncomeStatement = IncomeStatement(
-        revenue = Revenue(revenue = data["Revenue from sales and services"],
+        revenue = Revenue(sales = data["Revenue from sales and services"],
                           other_revenue = data["Other revenue"]),
         cogs = COGS(raw_material = data["Raw materials"],
                     direct_cost=data["Direct costs"]),
