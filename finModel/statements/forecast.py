@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 
 
-def is_forecast_avg_growth(inc:IncomeStatement, f_date:List[str]) -> IncomeStatement:
+def is_forecast_avg_growth(inc:IncomeStatement, f_date:np.ndarray) -> IncomeStatement:
     '''
     Performs the forecast for each date using historical period-on-period historical growth and % shares of revenue.
 
@@ -56,8 +56,8 @@ def is_forecast_avg_growth(inc:IncomeStatement, f_date:List[str]) -> IncomeState
     return forecasted
 
 
-def bs_forecast_avg_growth(bs:BalanceSheet,a_inc:IncomeStatement,f_inc:IncomeStatement,
-                              f_date:List[str]) -> "BalanceSheet":
+def bs_forecast_avg_growth(bs: BalanceSheet, a_inc: IncomeStatement, f_inc: IncomeStatement,
+                           f_date: np.ndarray) -> "BalanceSheet":
     '''
     Forecast for the dates provided using historical growths as % of revenues.
 

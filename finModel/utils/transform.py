@@ -40,7 +40,7 @@ def mean_g(ser: pd.Series) -> np.float:
     return mean
 
 
-def const_pandas_series(name: Hashable, f_dates: List[str],const:np.ndarray=np.array(0.0)) -> pd.Series:
+def const_pandas_series(name: Hashable, f_dates: np.ndarray, const:np.ndarray=np.array(0.0)) -> pd.Series:
     '''
     Create a pandas series with 0 values and indexed at f_dates; to be used to populate forecast() under financial
     statements.
@@ -51,7 +51,7 @@ def const_pandas_series(name: Hashable, f_dates: List[str],const:np.ndarray=np.a
     return pd.Series(np.repeat(const,len(f_dates)),index=np.array(f_dates,dtype="datetime64"),name=str(name))
 
 
-def const_growth(ser: pd.Series, g: float, f_dates: List[str]) -> pd.Series:
+def const_growth(ser: pd.Series, g: float, f_dates: np.ndarray) -> pd.Series:
     '''
     Project the most recent value of the series based on a constant growth rate
     :param ser: series to project
@@ -67,7 +67,7 @@ def const_growth(ser: pd.Series, g: float, f_dates: List[str]) -> pd.Series:
     return forecast
 
 
-def const_share(fcast: pd.Series, shr: np.ndarray, f_dates: List[str]) -> pd.Series:
+def const_share(fcast: pd.Series, shr: np.ndarray, f_dates: np.ndarray) -> pd.Series:
     '''
     Project a series based on a constant share of a already forecasted series
     :param fcast: forecasted series
@@ -81,7 +81,7 @@ def const_share(fcast: pd.Series, shr: np.ndarray, f_dates: List[str]) -> pd.Ser
     return forecast_shr
 
 
-def linear_trend(ser: pd.Series, f_dates: List[str]) -> pd.Series:
+def linear_trend(ser: pd.Series, f_dates: np.ndarray) -> pd.Series:
     '''
     Generate linear model forecasts of the series using OLS linear regression based on historical values provided
     :param ser: series to fit model upon
