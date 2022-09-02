@@ -4,14 +4,12 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-# To be inputted by user
-
-file_loc = 'C:/Users/ssmal/learning/Projects/financial modeling/data/cheesco-model.xlsm'
-actual_dates = ['2016-12-31','2017-12-31','2018-12-31']
-forecast_dates = ['2019-12-31','2020-12-31','2021-12-31','2022-12-31','2023-12-31']
 
 def source_income(file_loc:str,actual_dates:List[str]) -> IncomeStatement:
-
+    '''
+    This function will read the excel file, convert to a data-frame indexed on dates in datetime64 format
+    and a component in each column; which is then inputted into a statement class.
+    '''
     data = pd.read_excel(file_loc,sheet_name='P&L source',skiprows=2,usecols='B,D:F')
     data.columns = ['component'] + actual_dates
     data = data.dropna()
@@ -36,8 +34,12 @@ def source_income(file_loc:str,actual_dates:List[str]) -> IncomeStatement:
     )
     return income
 
-def source_balance(file_loc:str,actual_dates:List[str]) -> BalanceSheet:
 
+def source_balance(file_loc:str,actual_dates:List[str]) -> BalanceSheet:
+    '''
+    This function will read the excel file, convert to a data-frame indexed on dates in datetime64 format
+    and a component in each column; which is then inputted into a statement class.
+    '''
     data_a = pd.read_excel(file_loc,sheet_name='BS source',skiprows=2,usecols='B,D:F')
     data_a.columns = ['component'] + actual_dates
 
