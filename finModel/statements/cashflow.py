@@ -94,7 +94,3 @@ class CashFlowStatement:
                                         pd.Series(self.delta_equity_inc_dividend,name="Delta Equity (inc. dividends)"),
                                         pd.Series(self.net_cashflow,name="Net Cashflow")]
         return pd.concat(series_list,axis=1)
-
-
-
-
