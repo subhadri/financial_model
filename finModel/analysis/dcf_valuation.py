@@ -95,7 +95,7 @@ class DCFValuation:
             "": [v for k,v in res_dict.items()]
         })
 
-        return out
+        return out.set_index("metric")
 
     def simulate_enterprise_val(self, wacc: List[float] = None, lt_growth: List[float] = None) -> pd.DataFrame:
         '''
@@ -113,9 +113,11 @@ class DCFValuation:
                 result_set.append(d)
 
         simulated: pd.DataFrame = pd.DataFrame({
-            "wacc": [dcf.wacc for dcf in result_set],
-            "long-term growth": [dcf.g for dcf in result_set],
-            "enterpise value": [dcf.ent_val for dcf in result_set],
+            "WACC": [dcf.wacc for dcf in result_set],
+            "Long-term growth": [dcf.g for dcf in result_set],
+            "Enterprise Value": [dcf.ent_val for dcf in result_set],
+            "CFs in Forecast period": [dcf.pv_ufcf_shr for dcf in result_set],
+            "Continuing Value": [dcf.pv_cont_val_shr for dcf in result_set],
         })
 
         return simulated

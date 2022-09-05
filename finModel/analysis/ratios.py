@@ -19,14 +19,15 @@ class VizData:
     ebitda_rev_ratio: pd.DataFrame = field(init=False)
     ufcf_trend: pd.DataFrame = field(init=False)
     ebitda_components: pd.DataFrame = field(init=False)
-    days_outstanding_data: pd.DataFrame = field(init=False)
+    working_capital: pd.DataFrame = field(init=False)
+    dcf_simulations: pd.DataFrame = field(init=False)
 
     def __init__(self,dcf:DCFValuation):
         self.dcf = dcf
         self.ebitda_rev_ratio = VizData.get_ebitda_revenue_ratio(self.dcf.statement)
         self.ufcf_trend = VizData.get_ufcf_trend(self.dcf)
         self.ebitda_components = VizData.decompose_ebitda(self.dcf)
-        self.days_outstanding_data = VizData.get_days_outstanding(self.dcf)
+        self.working_capital = VizData.get_working_capital(self.dcf)
 
     @staticmethod
     def get_ebitda_revenue_ratio(fin:FinancialStatement) -> pd.DataFrame:
@@ -70,9 +71,8 @@ class VizData:
         delta_rev: pd.Series = dcf.statement.income.revenue.tot_revenue.diff()
         delta_cogs: pd.Series = dcf.statement.income.cogs.cogs.diff()
         delta_opex: pd.Series = dcf.statement.income.opex.opex.diff()
-        combined: pd.DataFrame = pd.concat([delta_ebitda,delta_rev,delta_cogs,delta_opex],axis=1)
+        combined: pd.DataFrame = pd.concat([delta_ebitda,delta_rev,delta_cogs,delta_opex],axis=1).dropna()
         combined.columns = ["Delta EBITDA","Delta revenues","Delta COGS","Delta OPEX"]
-        combined = combined.dropna()
         combined["period"] = combined.index
         combined["year"] = [str(date.year) for date in combined.period]
         combined["year-q"] = [f"{date.year}Q{date.quarter}" for date in combined.period]
@@ -80,7 +80,7 @@ class VizData:
         return combined
 
     @staticmethod
-    def get_days_outstanding(dcf: DCFValuation) -> pd.DataFrame:
+    def get_working_capital(dcf: DCFValuation) -> pd.DataFrame:
         '''
         Get DSO, DIO and DPO and the working capital
         '''
@@ -88,8 +88,12 @@ class VizData:
         dio: np.ndarray = -days_outstanding(dcf.statement.balance.inventory,dcf.statement.income.cogs.cogs)
         dpo: np.ndarray = -days_outstanding(dcf.statement.balance.trade_payable,dcf.statement.income.cogs.cogs)
         combined: pd.DataFrame = pd.DataFrame({"DSO":dso,"DIO":dio,"DPO":dpo},index=dcf.statement.income.revenue.sales.index)
+        combined: pd.DataFrame = pd.concat([combined,pd.Series(dcf.statement.balance.trade_receivable,name="Trade receivables"),
+                                            pd.Series(dcf.statement.balance.inventory,name="Inventory"),
+                                            -pd.Series(dcf.statement.balance.trade_payable,name="Trade payables")], axis=1)
+        combined["Working capital"] = combined["Trade receivables"] + combined["Inventory"] + combined["Trade payables"]
         combined["period"] = combined.index
         combined["year"] = [str(date.year) for date in combined.period]
         combined["year-q"] = [f"{date.year}Q{date.quarter}" for date in combined.period]
-        combined = combined.melt(id_vars="year",value_vars=["DSO","DIO","DPO"],var_name="metric",value_name="days")
+#        combined = combined.melt(id_vars="year",value_vars=["DSO","DIO","DPO"],var_name="metric",value_name="days")
         return combined

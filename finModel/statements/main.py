@@ -25,17 +25,3 @@ class FinancialStatement:
         self.income = inc.attach(f_inc)
         self.balance = bs.attach(f_bs)
         self.cash = CashFlowStatement(self.income,self.balance)
-
-
-def report_table(d:Union[IncomeStatement,BalanceSheet,CashFlowStatement],f_date:np.ndarray) -> pd.DataFrame:
-
-    data: pd.DataFrame = d.to_pandas_df()
-    order: pd.DataFrame = pd.DataFrame({'component': data.columns.values})
-    data['year'] = pd.DatetimeIndex(data.index).year
-    data['period_label'] = ['F' if date in f_date else 'A' for date in data.index]
-    data['index'] = [f"{round(data.year[idx],0)}{data.period_label[idx]}" for idx in data.index]
-    melted_data: pd.DataFrame = data.melt(id_vars=['year','period_label','index'],var_name='component')
-    pivoted_data: pd.DataFrame = melted_data.pivot(index='component',columns='index',values='value')
-    out: pd.DataFrame = pd.merge(left=order,right=pivoted_data,how="left",on="component")
-
-    return out

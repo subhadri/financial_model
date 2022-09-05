@@ -1,70 +1,117 @@
-from finModel.viz.generic import graph_settings, ChartLabels, set_labels_format, Colors
-import matplotlib.pyplot as plt
-from matplotlib.ticker import StrMethodFormatter
+from finModel.viz.generic import ChartLabels, Colors
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 from typing import Tuple, List
-import seaborn as sns
 import pandas as pd
+import numpy as np
 
 
-def plot_ebitda_revenue_ratio(data:pd.DataFrame,chart_ttl:str,size:Tuple[int]=(15,6)):
-    fig,ax = plt.subplots(1,2,figsize=size)
+def plot_ebitda_revenue_ratio(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
     # assign labels to be used
-    left_lbl: ChartLabels = ChartLabels(x="year",xlab="",y="Revenues",ylab="USD in thousands",y_fmt='{x:,.0f}',
-                                        grp="type",ttl="A: Revenues from sales and services")
-    right_lbl: ChartLabels = ChartLabels(x="year",xlab="",y="EBITDA%",ylab="% of revenues",y_fmt='{x:.2%}',
-                                         grp="type",ttl="B: EBITDA (%)")
+    l_lbl: ChartLabels = ChartLabels(x="year",xlab="",y="Revenues",ylab="USD in thousands",
+                                     grp="type",ttl="A: Revenues from sales and services")
+    r_lbl: ChartLabels = ChartLabels(x="year",xlab="",y="EBITDA%",ylab="% of revenues",
+                                     grp="type",ttl="B: EBITDA (%)")
     # create basic plots
-    sns.barplot(data=data,x=left_lbl.x,y=left_lbl.y,hue=left_lbl.grp,dodge=False,ax=ax[0])
-    sns.lineplot(data=data,x=right_lbl.x,y=right_lbl.y,hue=right_lbl.grp,ax=ax[1])
-    sns.scatterplot(data=data,x=right_lbl.x,y=right_lbl.y,color="gray",ax=ax[1])
-    # format the axis-ticks
-    ax[0].yaxis.set_major_formatter(left_lbl.y_fmt)
-    ax[1].yaxis.set_major_formatter(right_lbl.y_fmt)
-    # set axis labels
-    set_labels_format(ax[0],left_lbl)
-    set_labels_format(ax[1],right_lbl)
-    fig.suptitle(chart_ttl)
-    graph_settings(ax)
-    # add point labels
-    for bar in ax[0].containers:
-        ax[0].bar_label(bar,labels=[f'{x:,.0f}' for x in bar.datavalues])
-    for i, txt in enumerate([f'{v:.2%}' for v in data[right_lbl.y]]):
-        ax[1].annotate(txt,(data[right_lbl.x][i], data[right_lbl.y][i]))
+    fig = make_subplots(rows=1,cols=2,subplot_titles=(l_lbl.ttl,r_lbl.ttl))
+    fig.add_trace(go.Bar(x=data[l_lbl.x],y=data[l_lbl.y],hovertemplate='%{y:,.0f}<br>%{x}',name=l_lbl.y,
+                         marker={'color':Colors['cobalt blue']}),row=1,col=1)
+    fig.add_trace(go.Scatter(x=data[r_lbl.x],y=data[r_lbl.y],hovertemplate='%{y:.2%}<br>%{x}',name=r_lbl.y,
+                             marker={'color':Colors['cobalt blue']}),row=1,col=2)
 
-def plot_unlevered_cashflows(data:pd.DataFrame,chart_ttl:str,size:Tuple[int]=(10,6)):
-    fig,ax = plt.subplots(1,1,figsize=size)
-    lbl: ChartLabels = ChartLabels(x="year",xlab="",y="UFCF",ylab="USD in thousands",y_fmt='{x:,.0f}',grp="",ttl=chart_ttl)
-    plt.stackplot(data[lbl.x].values,data["PV of UFCF"].values,
-                  data["UFCF"].values-data["PV of UFCF"].values,
-                  labels=["Present value of UFCF","UFCF"],
-                  colors=Colors.values())
-    plt.legend(loc='upper right')
-    ax.yaxis.set_major_formatter(lbl.y_fmt)
-    set_labels_format(ax,lbl)
-    sns.set_theme(style="whitegrid")
+    fig.update_yaxes(row=1,col=1,title_text=l_lbl.ylab,tickformat=',.0f')
+    fig.update_yaxes(row=1,col=2,title_text=r_lbl.ylab,tickformat='.2%')
 
-def plot_ebitda_component(data:pd.DataFrame,chart_ttl:str,size:Tuple[int]=(18,7)):
-    fig,ax = plt.subplots(1,4,figsize=size)
-    y_list: List[str] = ["Delta EBITDA","Delta revenues","Delta COGS","Delta OPEX"]
-    lbl: List[ChartLabels] = [ChartLabels(x=y,xlab="",y="year",ylab="",grp="",ttl=y) for y in y_list]
+    fig.update_layout(height=500,width=1100,title=chart_ttl,template='simple_white',plot_bgcolor='#F9F9FA')
+
+    return fig
+
+
+def plot_unlevered_cashflows(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
+    lbl: ChartLabels = ChartLabels(x="year",xlab="",y="UFCF",y2="PV of UFCF",ylab="USD in thousands")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data[lbl.x], y=data[lbl.y2], fill='tozeroy', mode='none',hovertemplate='%{y:,.0f}<br>%{x}',
+                  name=lbl.y2,fillcolor=Colors['cobalt blue']))
+    fig.add_trace(go.Scatter(x=data[lbl.x], y=data[lbl.y], fill='tonexty', mode='none',hovertemplate='%{y:,.0f}<br>%{x}',
+                             name=lbl.y,fillcolor=Colors['light blue']))
+    fig.update_yaxes(title_text=lbl.ylab,tickformat=',.0f')
+    fig.update_layout(height=500,width=600,title=chart_ttl,template='simple_white',plot_bgcolor='#F9F9FA')
+
+    return fig
+
+
+def plot_ebitda_component(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
+    fig = go.Figure()
+    y_list: List[str] = ["Delta revenues","Delta COGS","Delta OPEX"]
+    lbl: List[ChartLabels] = [ChartLabels(x="year",xlab="",y=y,ylab="USD in thousands") for y in y_list]
     for i in range(0,len(lbl)):
-        sns.barplot(data=data,x=lbl[i].x,y=lbl[i].y,dodge=False,ax=ax[i],color=list(Colors.values())[i])
-        set_labels_format(ax[i],lbl[i])
-        for bar in ax[i].containers:
-            ax[i].bar_label(bar,labels=[f'{x:,.0f}' for x in bar.datavalues],label_type="center")
-        ax[i].xaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-        ax[i].xaxis.tick_top()
-    fig.suptitle(chart_ttl)
-    graph_settings(ax,legend=False)
+        fig.add_trace(go.Bar(x=data[lbl[i].x],y=data[lbl[i].y],hovertemplate='%{y:,.0f}<br>%{x}',name=lbl[i].y,
+                             marker={'color':list(Colors.values())[i]}, opacity=0.5))
+    fig.update_layout(barmode='relative', height=500, width=1000, title=chart_ttl, template='simple_white',
+                      plot_bgcolor='#F9F9FA')
+    fig.add_trace(go.Scatter(x=data["year"],y=data["Delta EBITDA"],hovertemplate="%{y:,.0f}",name="Delta EBITDA",
+                             marker={'color':'black'}))
+    fig.update_yaxes(title_text=lbl[0].ylab,tickformat=',.0f')
 
-def plot_grouped_bars(data:pd.DataFrame,chart_ttl:str,size:Tuple[int]=(15,4)):
-    fig,ax1 = plt.subplots(1,1,figsize=size)
-    lbl: ChartLabels = ChartLabels(x="year",xlab="",y="days",ylab="days",grp="metric",ttl=chart_ttl,y_fmt='{x:.0f}')
-    sns.barplot(data=data,x=lbl.x,y=lbl.y,hue=lbl.grp,ax=ax1,color=list(Colors.keys())[:3])
-    set_labels_format(ax1,lbl)
-    ax1.yaxis.set_major_formatter(lbl.y_fmt)
-    for bar in ax1.containers:
-        ax1.bar_label(bar,labels=[f'{x:.0f}' for x in bar.datavalues])
-    graph_settings(ax1,legend=False)
-    ax1.legend().set_title("")
+    return fig
+
+
+def plot_days_component(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    y_list: List[str] = ["DSO","DIO","DPO"]
+    lbl: List[ChartLabels] = [ChartLabels(x="year",xlab="",y=y,y2="Working capital",ylab="days",y2lab="USD in thousands") for y in y_list]
+    for i in range(0,len(lbl)):
+        fig.add_trace(go.Bar(x=data[lbl[i].x],y=data[lbl[i].y],hovertemplate='%{y:.0f}<br>%{x}',name=lbl[i].y,
+                             marker={'color':list(Colors.values())[i]}, opacity=0.5))
+    fig.update_layout(barmode='relative', height=500, width=1000, title=chart_ttl, template='simple_white',
+                      plot_bgcolor='#F9F9FA')
+    fig.add_trace(go.Scatter(x=data[lbl[0].x],y=data[lbl[0].y2],hovertemplate="%{y:,.0f}",name=lbl[0].y2,
+                             marker={'color':'black'}),secondary_y=True)
+    fig.update_yaxes(secondary_y=False,title_text=lbl[0].ylab,tickformat='.0f')
+    fig.update_yaxes(secondary_y=True,title_text=lbl[0].y2lab,tickformat=',.0f')
+
+    return fig
+
+
+def plot_wc_component(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
+    fig = go.Figure()
+    y_list: List[str] = ["Trade receivables","Inventory","Trade payables"]
+    lbl: List[ChartLabels] = [ChartLabels(x="year",xlab="",y=y,y2="Working capital",ylab="USD in thousands") for y in y_list]
+    for i in range(0,len(lbl)):
+        fig.add_trace(go.Bar(x=data[lbl[i].x],y=data[lbl[i].y],hovertemplate='%{y:,.0f}<br>%{x}',name=lbl[i].y,
+                             marker={'color':list(Colors.values())[i]}, opacity=0.5))
+    fig.update_layout(barmode='relative', height=500, width=1000, title=chart_ttl, template='simple_white',
+                      plot_bgcolor='#F9F9FA')
+    fig.add_trace(go.Scatter(x=data[lbl[0].x],y=data[lbl[0].y2],hovertemplate="%{y:,.0f}",name=lbl[0].y2,
+                             marker={'color':'black'}))
+    fig.update_yaxes(title_text=lbl[0].ylab,tickformat=',.0f')
+
+    return fig
+
+
+def plot_enterprise_vals(data:pd.DataFrame,lbl:ChartLabels) -> go.Figure:
+    x=np.array([f"Simulation {i+1}" for i in data.index])
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=data[lbl.y], fill='tozeroy', mode='none',hovertemplate='%{y:,.0f}',
+                             name=lbl.y,fillcolor=Colors['cobalt blue']))
+    fig.add_trace(go.Scatter(x=x,y=data[lbl.x],hovertemplate='%{y:.2%}',name=lbl.x,mode="none"))
+    fig.add_trace(go.Scatter(x=x,y=data[lbl.y2],hovertemplate='%{y:.2%}',name=lbl.y2,mode="none"))
+    fig.update_yaxes(title_text=lbl.ylab,tickformat=',.0f')
+    fig.update_xaxes(title_text="",visible=False)
+    fig.update_layout(height=500,width=1000,title=lbl.ttl,template='simple_white',plot_bgcolor='#F9F9FA',
+                      hovermode='x unified')
+    return fig
+
+
+# def plot_enterprise_vals(data:pd.DataFrame,lbl:ChartLabels) -> go.Figure:
+#     fig = make_subplots(specs=[[{"secondary_y": True}]])
+#     fig.add_trace(go.Bar(x=data[lbl.x],y=data[lbl.y],hovertemplate=None,name=lbl.y,marker={'color':Colors['light blue']}),
+#                   secondary_y=False)
+#     fig.add_trace(go.Scatter(x=data[lbl.x],y=data[lbl.y2],hovertemplate=None,name="WACC,g",mode="lines",
+#                              marker={'color':Colors['cobalt blue']}),secondary_y=True)
+#     fig.update_xaxes(title_text=lbl.xlab,tickformat=',.0f')
+#     fig.update_yaxes(secondary_y=False,title_text=lbl.ylab,tickformat='.2%')
+#     fig.update_yaxes(secondary_y=True,title_text=lbl.y2lab,tickformat='.2%')
+#     fig.update_layout(height=500,width=1000,title=lbl.ttl,template='simple_white',plot_bgcolor='#F9F9FA')
+#     return fig
 
