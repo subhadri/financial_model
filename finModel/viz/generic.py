@@ -43,26 +43,32 @@ def style_table(df:pd.DataFrame,bold_rows:List[str],pct_rows:List[str]) -> pd.Da
         else:
             formatted.loc[r] = df.loc[r].apply('{:,.0f}'.format)
 
-    # Treat zeroes/missing values as blank and negative no.s in ()
     for r in df.index.tolist():
         for c in df.columns:
-            if df.loc[r,c]==0. or df.loc[r,c]=="nan":
+            # Treat zeroes/missing values as blank and negative no.s in ()
+            if df.loc[r,c]==0. or df.loc[r,c].astype(str)=="nan":
                 formatted.loc[r,c] = ""
+            # All negative numbers in brackets
             if df.loc[r,c]<0:
                 formatted.loc[r,c] = f"({formatted.loc[r,c][1:]})"
 
+    # Black bold row totals
     index_bold_row = pd.IndexSlice[[True if val in bold_rows else False for val in df.index],:]
     formatted = formatted.reset_index().style.applymap(lambda x: "font-weight: bold", subset=index_bold_row)
 
+    # White background with gray share for forecast period
     formatted = formatted.set_properties(**{'background-color': 'white'}).hide_index()
-    formatted = formatted.set_properties(**{'background-color': 'lightgray'},
-                                         subset=formatted.columns.str.endswith("F"))
+    formatted = formatted.set_properties(**{'background-color': 'lightgray'},subset=formatted.columns.str.endswith("F"))
     formatted = formatted.hide_index()
 
     return formatted
 
 
-def report_table(data:pd.DataFrame,f_date:np.ndarray,bold_rows:List[str],pct_rows:List[str]=["None"]) -> pd.DataFrame.style:
+def style_statement(data:pd.DataFrame,f_date:np.ndarray,bold_rows:List[str],
+                    pct_rows:List[str]=["None"]) -> pd.DataFrame.style:
+    '''
+    Wrapper function to make the financial statements ready to be formatted using style_table()
+    '''
 
     order: pd.DataFrame = pd.DataFrame({'component': data.columns.values})
     data['year'] = pd.DatetimeIndex(data.index).year

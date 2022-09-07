@@ -35,7 +35,7 @@ def plot_unlevered_cashflows(data:pd.DataFrame,chart_ttl:str) -> go.Figure:
     fig.add_trace(go.Scatter(x=data[lbl.x], y=data[lbl.y], fill='tonexty', mode='none',hovertemplate='%{y:,.0f}<br>%{x}',
                              name=lbl.y,fillcolor=Colors['light blue']))
     fig.update_yaxes(title_text=lbl.ylab,tickformat=',.0f')
-    fig.update_layout(height=500,width=600,title=chart_ttl,template='simple_white',plot_bgcolor='#F9F9FA')
+    fig.update_layout(height=500,width=700,title=chart_ttl,template='simple_white',plot_bgcolor='#F9F9FA')
 
     return fig
 
@@ -101,17 +101,3 @@ def plot_enterprise_vals(data:pd.DataFrame,lbl:ChartLabels) -> go.Figure:
     fig.update_layout(height=500,width=1000,title=lbl.ttl,template='simple_white',plot_bgcolor='#F9F9FA',
                       hovermode='x unified')
     return fig
-
-
-# def plot_enterprise_vals(data:pd.DataFrame,lbl:ChartLabels) -> go.Figure:
-#     fig = make_subplots(specs=[[{"secondary_y": True}]])
-#     fig.add_trace(go.Bar(x=data[lbl.x],y=data[lbl.y],hovertemplate=None,name=lbl.y,marker={'color':Colors['light blue']}),
-#                   secondary_y=False)
-#     fig.add_trace(go.Scatter(x=data[lbl.x],y=data[lbl.y2],hovertemplate=None,name="WACC,g",mode="lines",
-#                              marker={'color':Colors['cobalt blue']}),secondary_y=True)
-#     fig.update_xaxes(title_text=lbl.xlab,tickformat=',.0f')
-#     fig.update_yaxes(secondary_y=False,title_text=lbl.ylab,tickformat='.2%')
-#     fig.update_yaxes(secondary_y=True,title_text=lbl.y2lab,tickformat='.2%')
-#     fig.update_layout(height=500,width=1000,title=lbl.ttl,template='simple_white',plot_bgcolor='#F9F9FA')
-#     return fig
-

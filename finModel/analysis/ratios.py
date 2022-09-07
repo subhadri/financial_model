@@ -11,7 +11,7 @@ import numpy as np
 
 
 @dataclass
-class VizData:
+class FinRatio:
     '''
     Prepare and store the datasets to be used for visualisation.
     '''
@@ -24,10 +24,10 @@ class VizData:
 
     def __init__(self,dcf:DCFValuation):
         self.dcf = dcf
-        self.ebitda_rev_ratio = VizData.get_ebitda_revenue_ratio(self.dcf.statement)
-        self.ufcf_trend = VizData.get_ufcf_trend(self.dcf)
-        self.ebitda_components = VizData.decompose_ebitda(self.dcf)
-        self.working_capital = VizData.get_working_capital(self.dcf)
+        self.ebitda_rev_ratio = FinRatio.get_ebitda_revenue_ratio(self.dcf.statement)
+        self.ufcf_trend = FinRatio.get_ufcf_trend(self.dcf)
+        self.ebitda_components = FinRatio.decompose_ebitda(self.dcf)
+        self.working_capital = FinRatio.get_working_capital(self.dcf)
 
     @staticmethod
     def get_ebitda_revenue_ratio(fin:FinancialStatement) -> pd.DataFrame:
