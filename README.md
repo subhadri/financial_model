@@ -6,12 +6,12 @@ Build a package in Python that where user will input a company's financial state
 
 ## Major milestones:
 
-1. Allow user to input the various components of the 3 financial statements-- `Income` , `Balance Sheet` and `Cashflow`
+1. User needs to provide the data for 2 financial statements-- `Income` and `Balance Sheet`, preferably in the source format inside the data folder.
 2. Compute the remaining components of the financial statements
 3. Forecast 5-year ahead values based on commonly used strategies
 4. Report each statement with actuals and forecats in a concise manner
 5. Build and report a DCF valuation model
-6. Provide visualisations to under financial performance of the company
+6. Provide visualisations to understand the financial performance of the company and what to expect in 5 years
 
 ## Limitations:
 
