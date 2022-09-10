@@ -1,6 +1,8 @@
-# financial_model
+### Package:: finModel
+#### Author: Subhadri Sankar Mallik
+#### Date: Sep-2022
 
-## Idea:
+## Description:
 
 Build a package in Python that where user will input a company's financial statements and get back forecasts and DCF valuation with visual insights of the company's future performance.
 
